@@ -3,6 +3,7 @@ import Tab from './tab';
 
 export interface Options {
   statesPaths?: string[];
+  statesRemove?: string[];
   key?: string;
   onBeforeReplace?(state: any): any;
   onBeforeSave?(state: any): any;
@@ -12,12 +13,14 @@ export default function(options?: Options) {
   const tab = new Tab(window);
   let key: string = 'vuex-multi-tab';
   let statesPaths: string[] = [];
+  let statesRemove: string[] = [];
   let onBeforeReplace = (state: any) => state;
   let onBeforeSave = (state: any) => state;
 
   if (options) {
     key = options.key ? options.key : key;
     statesPaths = options.statesPaths ? options.statesPaths : statesPaths;
+    statesRemove = options.statesRemove ? options.statesRemove : statesRemove;
     onBeforeReplace = options.onBeforeReplace || onBeforeReplace;
     onBeforeSave = options.onBeforeSave || onBeforeSave;
   }
@@ -26,6 +29,14 @@ export default function(options?: Options) {
     const result = {};
     statesPaths.forEach(statePath => {
       set(statePath, pick(statePath, state), result);
+    });
+    return result;
+  }
+
+  function removeStates(state: { [key: string]: any }): { [key: string]: any } {
+    const result = {};
+    statesRemove.forEach(statePath => {
+      remove(statePath, pick(statePath, state), result);
     });
     return result;
   }
@@ -93,6 +104,11 @@ export default function(options?: Options) {
       // Filter state
       if (statesPaths.length > 0) {
         toSave = filterStates(state);
+      }
+
+      // Remove state
+      if (statesRemove.length > 0) {
+        toSave = removeStates(state);
       }
 
       toSave = onBeforeSave(toSave);
